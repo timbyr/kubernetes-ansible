@@ -1,0 +1,7 @@
+[master]
+kmaster.openstack.timbyr.com
+
+[nodes]
+knode-1.openstack.timbyr.com
+knode-2.openstack.timbyr.com
+knode-3.openstack.timbyr.com

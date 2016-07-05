@@ -1,0 +1,26 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: kube-controller-manager
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-controller-manager
+    image: gcr.io/google_containers/hyperkube:{{version}}
+    command:
+    - /hyperkube
+    - controller-manager
+    - --master=http://{{master_ip}}
+    - --cluster-cidr={{cluster_cidr}}
+    - --allocate-node-cidrs=true
+    {% if cloud_provider == 'aws' -%} 
+    - --cloud-provider=openstack
+    - --cloud-config=/etc/kubernetes/cloud_config
+    {% endif -%} 
+    livenessProbe:
+      httpGet:
+        path: "/healthz"
+        port: 10252
+      initialDelaySeconds: 180
+      timeoutSeconds: 15

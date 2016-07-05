@@ -1,0 +1,40 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-apiserver
+    image: gcr.io/google_containers/hyperkube:{{version}}
+    command:
+      - /hyperkube
+      - apiserver
+      - --etcd-servers=http://127.0.0.1:4001
+      - --token-auth-file=/dev/null
+      - --bind-address=0.0.0.0
+      - --secure-port=443
+      - --insecure-port=80
+      - --insecure-bind-address=0.0.0.0
+      - --advertise-address={{master_ip}}
+      - --allow-privileged=true
+      - --service-cluster-ip-range={{ service_cluster_ip_range}}
+      {% if cloud_provider == 'aws' -%} 
+      - --cloud-provider=openstack
+      - --cloud-config=/etc/kubernetes/cloud_config
+      {% endif -%} 
+      - --admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+    ports:
+    - name: https
+      hostPort: 443
+      containerPort: 443
+    - name: http
+      hostPort: 80
+      containerPort: 80
+    livenessProbe:
+      httpGet:
+        path: "/healthz"
+        port: 80
+      initialDelaySeconds: 15
+      timeoutSeconds: 15

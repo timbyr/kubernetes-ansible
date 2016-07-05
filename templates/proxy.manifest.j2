@@ -1,0 +1,16 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: kube-proxy
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-proxy
+    image: gcr.io/google_containers/hyperkube:{{version}}
+    command:
+      - /hyperkube
+      - proxy
+      - --master=http://{{master_ip}}
+    securityContext:
+      privileged: true

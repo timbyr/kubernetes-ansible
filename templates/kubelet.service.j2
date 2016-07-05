@@ -1,0 +1,27 @@
+[Unit]
+Description=Kubernetes Kubelet Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=docker.service
+Requires=docker.service
+
+[Service]
+WorkingDirectory=/var/lib/kubelet
+ExecStart=/usr/local/bin/hyperkube kubelet \
+--api-servers=http://{{master_ip}} \
+--address=0.0.0.0 \
+--configure-cbr0=true \
+--cluster_domain={{dns_domain}} \
+--cluster_dns={{dns_service_ip}} \
+--config=/etc/kubernetes/manifests \
+--allow-privileged=true \
+{% if cloud_provider == 'openstack' -%}
+        --cloud_provider=openstack \
+        --cloud_config=/etc/kubernetes/cloud_config \
+{% endif -%}
+{% if 'master' in group_names -%}
+         --register-schedulable=false
+{% endif -%}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
