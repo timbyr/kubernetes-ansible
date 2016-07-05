@@ -1,45 +1,42 @@
 ---
-- hosts: master
+- hosts: common
   user: centos
   gather_facts: true
   name: configure etcd
   become: true
   vars:
     master_ip: 10.0.0.36
-    version: 1.3.0
-    cloud_provider: "" 
+    version: v1.3.0
+    cloud_provider: ""
     dns_domain: cluster.local
     dns_service_ip: 172.18.254.254
-    service_cluster_ip_range: 172.18.0.0/16
-    cluster_cidr: 172.19.0.0/16
   tasks:
-    - name: Enable etcd service
-      service:
-        enabled: yes
-        name: etcd
-        state: started
     - name: Ensure directory
       file:
         path: /etc/kubernetes/manifests
         state: directory
-    - name: Copy api manifest
+    - name: Copy proxy manifest
       template:
-        src: templates/api.manifest.j2
-        dest: /etc/kubernetes/manifests/api.manifest
-    - name: Copy controller manager manifest
-      template:
-        src: templates/controller.manifest.j2
-        dest: /etc/kubernetes/manifests/controller.manifest
-    - name: Copy scheduler manifest
-      template:
-        src: templates/scheduler.manifest.j2
-        dest: /etc/kubernetes/manifests/scheduler.manifest
+        src: templates/proxy.manifest.j2
+        dest: /etc/kubernetes/manifests/proxy.manifest 
     - name: Install hyperkube
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v{{version}}/bin/linux/amd64/hyperkube
+        url: https://storage.googleapis.com/kubernetes-release/release/{{version}}/bin/linux/amd64/hyperkube
         dest: /usr/local/bin/hyperkube
         validate_certs: no
-        mode: 755
+        mode: u=rwx,g=rx,o=rx
+    - name: Stop docker
+      service:
+        name: docker
+        state: stopped
+      when: '"docker0" in ansible_interfaces'
+    - name: Set docker network options
+      copy:
+        src: files/docker-latest-network
+        dest: /etc/sysconfig/docker-network
+    - name: Remove docker0
+      command: ip link del dev docker0
+      when: '"docker0" in ansible_interfaces'
     - name: Install kubelet systemd
       template:
         src: templates/kubelet.service.j2
@@ -52,3 +49,34 @@
         name: kubelet
         state: started
 
+- hosts: master
+  user: centos
+  gather_facts: true
+  name: configure etcd
+  become: true
+  vars:
+    master_ip: 10.0.0.36
+    version: v1.3.0
+    cloud_provider: "" 
+    dns_domain: cluster.local
+    dns_service_ip: 172.18.254.254
+    service_cluster_ip_range: 172.18.0.0/16
+    cluster_cidr: 172.19.0.0/16
+  tasks:
+    - name: Enable etcd service
+      service:
+        enabled: yes
+        name: etcd
+        state: started
+    - name: Copy api manifest
+      template:
+        src: templates/api.manifest.j2
+        dest: /etc/kubernetes/manifests/api.manifest
+    - name: Copy controller manager manifest
+      template:
+        src: templates/controller.manifest.j2
+        dest: /etc/kubernetes/manifests/controller.manifest
+    - name: Copy scheduler manifest
+      template:
+        src: templates/scheduler.manifest.j2
+        dest: /etc/kubernetes/manifests/scheduler.manifest

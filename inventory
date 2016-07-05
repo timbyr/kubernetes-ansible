@@ -1,7 +1,11 @@
 [master]
-kmaster.openstack.timbyr.com
+192.168.254.3
 
 [nodes]
-knode-1.openstack.timbyr.com
-knode-2.openstack.timbyr.com
-knode-3.openstack.timbyr.com
+192.168.254.4
+192.168.254.5
+192.168.254.6
+
+[common:children]
+master
+nodes

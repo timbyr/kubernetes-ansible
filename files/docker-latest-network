@@ -1,0 +1,2 @@
+# /etc/sysconfig/docker-network
+DOCKER_NETWORK_OPTIONS="--bridge=cbr0 --ip-masq=false --iptables=false --insecure-registry 0.0.0.0/0"

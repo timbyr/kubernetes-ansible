@@ -11,7 +11,7 @@ spec:
     command:
       - /hyperkube
       - apiserver
-      - --etcd-servers=http://127.0.0.1:4001
+      - --etcd-servers=http://127.0.0.1:2379
       - --token-auth-file=/dev/null
       - --bind-address=0.0.0.0
       - --secure-port=443
@@ -24,7 +24,7 @@ spec:
       - --cloud-provider=openstack
       - --cloud-config=/etc/kubernetes/cloud_config
       {% endif -%} 
-      - --admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+      - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
     ports:
     - name: https
       hostPort: 443
@@ -36,5 +36,5 @@ spec:
       httpGet:
         path: "/healthz"
         port: 80
-      initialDelaySeconds: 15
+      initialDelaySeconds: 180
       timeoutSeconds: 15
