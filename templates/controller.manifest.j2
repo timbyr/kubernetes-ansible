@@ -7,14 +7,14 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-controller-manager
-    image: gcr.io/google_containers/hyperkube:{{version}}
+    image: {{image}}:{{tag}}
     command:
     - /hyperkube
     - controller-manager
     - --master=http://{{master_ip}}
     - --cluster-cidr={{cluster_cidr}}
     - --allocate-node-cidrs=true
-    {% if cloud_provider == 'aws' -%} 
+    {% if cloud_provider == 'openstack' -%} 
     - --cloud-provider=openstack
     - --cloud-config=/etc/kubernetes/cloud_config
     {% endif -%} 
@@ -24,3 +24,12 @@ spec:
         port: 10252
       initialDelaySeconds: 180
       timeoutSeconds: 15
+    volumeMounts:
+      - name: cloudconfig
+        mountPath: /etc/kubernetes/cloud_config
+        readOnly: true
+  volumes:
+    - name: cloudconfig
+      hostPath:
+        path: /etc/kubernetes/cloud_config
+

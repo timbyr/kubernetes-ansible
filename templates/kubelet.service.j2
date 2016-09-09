@@ -15,12 +15,14 @@ ExecStart=/usr/local/bin/hyperkube kubelet \
 --config=/etc/kubernetes/manifests \
 --allow-privileged=true \
 {% if cloud_provider == 'openstack' -%}
+--override-hostname = {{overridehostname}} \
 --cloud_provider=openstack \
 --cloud_config=/etc/kubernetes/cloud_config \
 {% endif -%}
 {% if 'master' in group_names -%}
---pod-cidr=172.19.254.0/24 \
---register-schedulable=false
+--pod-cidr=10.1.254.0/24 \
+--register-schedulable=false \
+--reconcile-cidr=false
 {% endif -%}
 Restart=on-failure
 

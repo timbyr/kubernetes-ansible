@@ -2,29 +2,39 @@
 - hosts: common
   user: centos
   gather_facts: true
-  name: configure etcd
+  name: Configure common
   become: true
-  vars:
-    master_ip: 10.0.0.36
-    version: v1.3.0
-    cloud_provider: ""
-    dns_domain: cluster.local
-    dns_service_ip: 172.18.254.254
   tasks:
     - name: Ensure directory
       file:
         path: /etc/kubernetes/manifests
         state: directory
+      tags: manifests
     - name: Copy proxy manifest
       template:
         src: templates/proxy.manifest.j2
         dest: /etc/kubernetes/manifests/proxy.manifest 
+      tags: manifests
     - name: Install hyperkube
       get_url:
         url: https://storage.googleapis.com/kubernetes-release/release/{{version}}/bin/linux/amd64/hyperkube
         dest: /usr/local/bin/hyperkube
         validate_certs: no
+        sha256sum: "{{sha256sum}}"
         mode: u=rwx,g=rx,o=rx
+      when: not localhyperkube
+      tags: test
+    - name: Install hyperkube
+      copy:
+        src: "{{localhyperkube}}"
+        dest: /usr/local/bin/hyperkube
+        mode: u=rwx,g=rx,o=rx
+      when: localhyperkube != ""
+      tags: test
+    - name: Copy cloud config
+      template:
+        src: templates/cloud_config
+        dest: /etc/kubernetes/cloud_config
     - name: Stop docker
       service:
         name: docker
@@ -52,16 +62,8 @@
 - hosts: master
   user: centos
   gather_facts: true
-  name: configure etcd
+  name: configure master
   become: true
-  vars:
-    master_ip: 10.0.0.36
-    version: v1.3.0
-    cloud_provider: "" 
-    dns_domain: cluster.local
-    dns_service_ip: 172.18.254.254
-    service_cluster_ip_range: 172.18.0.0/16
-    cluster_cidr: 172.19.0.0/16
   tasks:
     - name: Enable etcd service
       service:
@@ -72,11 +74,14 @@
       template:
         src: templates/api.manifest.j2
         dest: /etc/kubernetes/manifests/api.manifest
+      tags: manifests
     - name: Copy controller manager manifest
       template:
         src: templates/controller.manifest.j2
         dest: /etc/kubernetes/manifests/controller.manifest
+      tags: manifests
     - name: Copy scheduler manifest
       template:
         src: templates/scheduler.manifest.j2
         dest: /etc/kubernetes/manifests/scheduler.manifest
+      tags: manifests

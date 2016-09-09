@@ -1,0 +1,10 @@
+[Global]
+auth-url = {{auth_url}}
+domain-name = {{domain_name}}
+username = {{user_name}}
+tenant-name = {{tenant_name}}
+password = {{password}}
+region = RegionOne
+[LoadBalancer]
+subnet-id = {{subnet_id}}
+floating-network-id = {{public_net_id}}
